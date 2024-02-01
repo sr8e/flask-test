@@ -55,7 +55,7 @@ def login():
     session.clear()
     state = hashlib.sha256(os.urandom(64)).hexdigest()[:16]
     session["state"] = state
-    return f'<a href="{generate_openid_request_url(state)}">log in with google</a>'
+    return generate_openid_request_url(state)
 
 
 @blueprint.route("/callback")
@@ -89,7 +89,7 @@ def check():
     session["id"] = sub
     session["expires_at"] = now() + timedelta(hours=2)
 
-    return redirect(url_for("core.mypage"))
+    return redirect("http://localhost:3000/")
 
 
 @blueprint.route("/logout")
