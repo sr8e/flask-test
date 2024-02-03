@@ -9,3 +9,4 @@ CLIENT_ID = os.getenv("OPENID_CLIENT_ID")
 CLIENT_SECRET = os.getenv("OPENID_CLIENT_SECRET")
 
 TIMEZONE = "Asia/Tokyo"
+FRONTEND_ADDRESS = "http://localhost:3000"

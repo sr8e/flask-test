@@ -8,7 +8,7 @@ from datetime import timedelta
 
 import requests
 from flask import (
-    Blueprint, current_app, g, redirect, request, session, url_for
+    Blueprint, current_app, g, redirect, request, session, url_for, abort, jsonify
 )
 
 from .db import get_db
@@ -50,17 +50,20 @@ def login():
         and (exp := getattr(g, "exp", None)) is not None
         and exp >= now()
     ):
-        return redirect(url_for("core.mypage"))
+        return jsonify(authorized=True)
+    
+    if "link" not in request.args:
+        return jsonify(authorized=False)
 
     session.clear()
     state = hashlib.sha256(os.urandom(64)).hexdigest()[:16]
     session["state"] = state
-    return generate_openid_request_url(state)
+    return jsonify(authorized=False, link=generate_openid_request_url(state))
 
 
 @blueprint.route("/callback")
 def check():
-    if request.args.get("state") != session["state"]:
+    if request.args.get("state", None) != session["state"]:
         return "invalid state"
 
     res = requests.post(
@@ -89,14 +92,14 @@ def check():
     session["id"] = sub
     session["expires_at"] = now() + timedelta(hours=2)
 
-    return redirect("http://localhost:3000/")
+    return redirect(current_app.config["FRONTEND_ADDRESS"])
 
 
 @blueprint.route("/logout")
 def logout():
     session.clear()
     g.pop("user")
-    return redirect(url_for("core.top"))
+    return jsonify(message="success")
 
 
 # decorator
@@ -104,7 +107,7 @@ def auth_required(view):
     @functools.wraps(view)
     def _wrapper(*args, **kwargs):
         if g.user is None or g.exp < now():
-            return redirect(url_for("auth.login"))
+            abort(401)
 
         return view(*args, **kwargs)
 
