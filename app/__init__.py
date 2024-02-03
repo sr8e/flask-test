@@ -2,7 +2,7 @@ from pathlib import Path
 
 from flask import Flask
 
-from . import auth, core, db
+from . import auth, core, db, errors
 
 
 def create_app():
@@ -17,5 +17,8 @@ def create_app():
 
     app.register_blueprint(auth.blueprint)
     app.register_blueprint(core.blueprint)
+
+    app.register_error_handler(401, errors.unauthorized)
+    app.register_error_handler(400, errors.badRequest)
 
     return app
