@@ -25,7 +25,8 @@ create table payment(
     genre integer references genre (id) on delete set null,
     attr text,
     note text,
-    method integer references method (id) on delete set null
+    method integer references method (id) on delete set null,
+    user_id text references user (id) on delete cascade
 );
 
 insert into genre("name") values ("食費"), ("日用品"), ("交通費"), ("趣味・娯楽"), ("光熱費");

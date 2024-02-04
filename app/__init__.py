@@ -8,9 +8,8 @@ from . import auth, core, db, errors
 def create_app():
     app = Flask(__name__)
 
-    app.config.from_mapping({"DATABASE": Path(app.instance_path) / "data.db"})
-
     app.config.from_pyfile("config.py", silent=True)
+    app.config.from_mapping({"DATABASE": Path(app.instance_path) / app.config["DATABASE_FILENAME"]})
 
     app.teardown_appcontext(db.close_db)
     app.cli.add_command(db.create_db)
