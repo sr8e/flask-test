@@ -21,12 +21,14 @@ def mypage():
     return f"yo welcome {name}"
 
 
-@blueprint.route("/choices")
+@blueprint.route("/choices", methods=("GET",))
 @auth_required
 def user_choices():
     con = get_db()
-    res_m = get_users_methods(con, g.user, True)
-    res_g = get_users_genres(con, g.user, True)
+
+    include_default = "include_default" in request.args
+    res_m = get_users_methods(con, g.user, include_default)
+    res_g = get_users_genres(con, g.user, include_default)
 
     response = {
         "genres": {r["id"]: r["name"] for r in res_g},
@@ -34,6 +36,53 @@ def user_choices():
     }
 
     return jsonify(response)
+
+
+@blueprint.route("/choices/genre", methods=("GET", "POST"))
+@auth_required
+def user_genres_list_create():
+    con = get_db()
+
+    if request.method == "POST":
+        values = request.get_json()
+        try:
+            con.executemany(
+                "insert into genre (`name`, `user_id`) values (?, ?);",
+                [(name, g.user) for name in values],
+            )
+            con.commit()
+        except sqlite3.ProgrammingError as e:
+            abort(400, e.args)
+
+    include_default = "include_default" in request.args
+    res = get_users_genres(con, g.user, include_default)
+
+    return jsonify({r["id"]: r["name"] for r in res}), 200
+
+
+@blueprint.route("/choices/method", methods=("GET", "POST"))
+@auth_required
+def user_methods_list_create():
+    con = get_db()
+
+    if request.method == "POST":
+        values = request.get_json()
+        try:
+            con.executemany(
+                "insert into method (`name`, `not_own`, `user_id`) values (?, ?, ?);",
+                [(v["name"], v["not_own"], g.user) for v in values],
+            )
+            con.commit()
+        except sqlite3.ProgrammingError as e:
+            abort(400, e.args)
+        except KeyError as e:
+            abort(400, f"invalid data")
+
+    include_default = "include_default" in request.args
+    res = get_users_methods(con, g.user, include_default)
+
+    return jsonify({r["id"]: r["name"] for r in res}), 200
+
 
 @blueprint.route("/payment", methods=("GET", "POST"))
 @auth_required
