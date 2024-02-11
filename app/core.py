@@ -114,7 +114,13 @@ def payment():
         return jsonify("success"), 200
 
     elif request.method == "GET":
-        res = con.execute("select sum(`amount`) as `total`, strftime('%Y-%m', date) as `month`, `genre` from payment where `user_id` = ? group by `genre`, `month` ;", (g.user,))
+        res = con.execute(
+            "select sum(payment.`amount`) as `total`, strftime('%Y-%m', payment.`date`) as `month`, "
+            "payment.`genre`, method.`not_own` "
+            "from payment left outer join method on payment.`method` = method.`id` "
+            "where payment.`user_id` = ? group by payment.`genre`, `month`, method.`not_own`;",
+            (g.user,),
+        )
         return jsonify([dict(zip(r.keys(), r)) for r in res.fetchall()]), 200
 
 
