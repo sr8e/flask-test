@@ -35,6 +35,7 @@ def get_users_methods(con, uid, include_default=False):
     res = con.execute(query, (uid,))
     return res.fetchall()
 
+
 def get_users_genres(con, uid, include_default=False):
     query = "select * from `genre` where `user_id` = ?"
     if include_default:

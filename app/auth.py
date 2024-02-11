@@ -8,7 +8,15 @@ from datetime import timedelta
 
 import requests
 from flask import (
-    Blueprint, current_app, g, redirect, request, session, url_for, abort, jsonify
+    Blueprint,
+    current_app,
+    g,
+    redirect,
+    request,
+    session,
+    url_for,
+    abort,
+    jsonify,
 )
 
 from .db import get_db

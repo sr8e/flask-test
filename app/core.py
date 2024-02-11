@@ -103,7 +103,11 @@ def payment():
                     rows[i][k] = None
 
         try:
-            con.executemany("insert into payment(`amount`, `date`, `shop`, `genre`, `attr`, `note`, `method`) values (:amount, :date, :shop, :genre, :attr, :note, :method)", rows)
+            con.executemany(
+                "insert into payment(`amount`, `date`, `shop`, `genre`, `attr`, `note`, `method`) "
+                "values (:amount, :date, :shop, :genre, :attr, :note, :method)",
+                rows,
+            )
         except sqlite3.ProgrammingError as e:
             abort(400, e.args)
         con.commit()
