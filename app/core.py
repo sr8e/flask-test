@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlite3
 from flask import Blueprint, abort, g, jsonify, url_for, request, render_template
 
@@ -122,5 +123,48 @@ def payment():
             (g.user,),
         )
         return jsonify([dict(zip(r.keys(), r)) for r in res.fetchall()]), 200
+
+
+@blueprint.route("/payment/detail", methods=("GET",))
+@auth_required
+def payment_detail():
+    con = get_db()
+    month_s = request.args.get("month", None)
+    genre_s = request.args.get("genre", None)
+
+    params = {"user_id": g.user}
+    conds = []
+
+    if month_s is not None:
+        try:
+            month = datetime.strptime(month_s, "%Y-%m").date()
+        except ValueError:
+            abort(400, f"invalid parameter: month: {month_s}")
+        conds.append(
+            "and `date` between date(:month, 'start of month') and "
+            "date(:month, 'start of month', '+1 month', '-1 day') "
+        )
+        params["month"] = month
+    
+    if genre_s is not None:
+        try:
+            genre = int(genre_s)
+        except ValueError:
+            abort(400, f"invalid parameter: genre: {genre_s}")
+        conds.append("and `genre` = :genre ")
+        params["genre"] = genre
+    
+    sql = (
+        "select payment.`id`, payment.`date`, payment.`amount`, payment.`shop`, "
+        "payment.`genre`, payment.`attr`, payment.`note`, payment.`method`, "
+        "genre.`name` as `gname`, method.`name` as `mname`, method.`not_own` "
+        "from payment "
+        "left outer join genre on payment.`genre` = genre.`id` "
+        "left outer join method on payment.`method` = method.`id` "
+        f"where payment.`user_id` = :user_id {''.join(conds)}"
+        "order by payment.`date`"
+    )
+    res = con.execute(sql, params)
+    return jsonify([dict(zip(row.keys(), row)) for row in res.fetchall()])
 
 
