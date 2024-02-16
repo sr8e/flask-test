@@ -102,11 +102,12 @@ def payment():
             for k in keys_opt:
                 if k not in rows[i]:
                     rows[i][k] = None
+            rows[i]["user_id"] = g.user
 
         try:
             con.executemany(
-                "insert into payment(`amount`, `date`, `shop`, `genre`, `attr`, `note`, `method`) "
-                "values (:amount, :date, :shop, :genre, :attr, :note, :method)",
+                "insert into payment(`amount`, `date`, `shop`, `genre`, `attr`, `note`, `method`, `user_id`) "
+                "values (:amount, :date, :shop, :genre, :attr, :note, :method, :user_id)",
                 rows,
             )
         except sqlite3.ProgrammingError as e:
